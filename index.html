@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Adopt Me PRO</title>
+
+<style>
+body { background:#0f172a; color:white; font-family:Arial; margin:0; }
+h1 { text-align:center; padding:15px; }
+
+.container { display:flex; gap:20px; padding:20px; }
+
+.panel {
+  flex:1;
+  background:#1e293b;
+  border-radius:15px;
+  padding:15px;
+  position:relative;
+}
+
+.tradeItem {
+  background:#334155;
+  padding:10px;
+  margin:5px 0;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.tradeItem img {
+  width:40px;
+  height:40px;
+  border-radius:6px;
+}
+
+.plus {
+  background:#22c55e;
+  border:none;
+  padding:10px;
+  border-radius:10px;
+  width:100%;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+.menu {
+  position:absolute;
+  top:60px;
+  left:10px;
+  right:10px;
+  background:#020617;
+  border-radius:15px;
+  max-height:300px;
+  overflow:auto;
+  display:none;
+  padding:10px;
+}
+
+.pet {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.pet:hover { background:#1e293b; }
+
+.pet img {
+  width:35px;
+  height:35px;
+}
+
+.result {
+  text-align:center;
+  font-size:24px;
+  padding:15px;
+}
+</style>
+
+</head>
+<body>
+
+<h1>Adopt Me Trade PRO</h1>
+
+<div class="container">
+
+<div class="panel">
+<h2>You</h2>
+<div id="leftTrade"></div>
+<button class="plus" onclick="toggleMenu('leftMenu')">+ Add Pet</button>
+<div id="leftMenu" class="menu"></div>
+</div>
+
+<div class="panel">
+<h2>Them</h2>
+<div id="rightTrade"></div>
+<button class="plus" onclick="toggleMenu('rightMenu')">+ Add Pet</button>
+<div id="rightMenu" class="menu"></div>
+</div>
+
+</div>
+
+<div class="result" id="result">Loading...</div>
+
+<script>
+
+let values = {};
+let left = [];
+let right = [];
+
+// ===== ПЕТЫ (можешь добавить сколько хочешь) =====
+let pets = [
+ "Shadow Dragon","Bat Dragon","Frost Dragon","Giraffe",
+ "Owl","Parrot","Crow","Evil Unicorn","Kangaroo","Turtle"
+];
+
+// ===== FANDOM IMAGE FUNCTION =====
+function getImage(name){
+  return "https://adoptme.fandom.com/wiki/Special:Redirect/file/" 
+  + name.replaceAll(" ","_") + ".png";
+}
+
+// ===== LOAD VALUES =====
+fetch("values.json")
+.then(r=>r.json())
+.then(data=>{
+  values = data;
+  document.getElementById("result").innerText = "Ready";
+});
+
+// ===== CREATE MENU =====
+function createMenu(id){
+  let el = document.getElementById(id);
+  el.innerHTML="";
+
+  pets.forEach(name=>{
+    let div=document.createElement("div");
+    div.className="pet";
+
+    let img = document.createElement("img");
+    img.src = getImage(name);
+    img.onerror = ()=> img.src="https://via.placeholder.com/40";
+
+    div.appendChild(img);
+
+    let span=document.createElement("span");
+    span.innerText=name;
+    div.appendChild(span);
+
+    div.onclick=()=>{
+      add(name, id.includes("left") ? "left" : "right");
+      el.style.display="none";
+    };
+
+    el.appendChild(div);
+  });
+}
+
+createMenu("leftMenu");
+createMenu("rightMenu");
+
+// ===== TOGGLE =====
+function toggleMenu(id){
+  let el = document.getElementById(id);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+// ===== ADD =====
+function add(name, side){
+  let obj = {name:name, type:"N"};
+
+  if(side==="left"){
+    left.push(obj);
+    draw(left,"leftTrade");
+  } else {
+    right.push(obj);
+    draw(right,"rightTrade");
+  }
+
+  calc();
+}
+
+// ===== DRAW =====
+function draw(list,id){
+  let el=document.getElementById(id);
+  el.innerHTML="";
+
+  list.forEach((p,i)=>{
+    let div=document.createElement("div");
+    div.className="tradeItem";
+
+    let img = document.createElement("img");
+    img.src = getImage(p.name);
+    img.onerror = ()=> img.src="https://via.placeholder.com/40";
+
+    div.appendChild(img);
+
+    let text = document.createElement("span");
+    text.innerText = p.name;
+    div.appendChild(text);
+
+    let select = document.createElement("select");
+    ["N","R","F","FR","NFR"].forEach(t=>{
+      let o=document.createElement("option");
+      o.value=t;
+      o.innerText=t;
+      select.appendChild(o);
+    });
+
+    select.onchange = (e)=>{
+      p.type = e.target.value;
+      calc();
+    };
+
+    div.appendChild(select);
+
+    el.appendChild(div);
+  });
+}
+
+// ===== CALC =====
+function calc(){
+  let l=sum(left);
+  let r=sum(right);
+
+  let res="FAIR";
+  if(l>r*1.1) res="WIN";
+  if(r>l*1.1) res="LOSE";
+
+  document.getElementById("result").innerText =
+  `You: ${l} | Them: ${r} → ${res}`;
+}
+
+// ===== SUM =====
+function sum(list){
+  let t=0;
+
+  list.forEach(p=>{
+    if(values[p.name] && values[p.name][p.type]){
+      t += values[p.name][p.type];
+    }
+  });
+
+  return t;
+}
+
+</script>
+
+</body>
+</html>
