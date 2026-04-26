@@ -2,75 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Adopt Me Trade Calculator</title>
+<title>Adopt Me Trade Calculator PRO</title>
 
 <style>
-body {
-  margin:0;
+body{
   font-family: Arial;
-  background:#0e0e0e;
+  background:#0f172a;
   color:white;
+  margin:0;
 }
 
-h1 {
-  text-align:center;
-  padding:15px;
-}
+h1{text-align:center;padding:15px;}
 
-.container {
-  display:flex;
-  gap:15px;
-  padding:10px;
-}
-
-.side {
-  flex:1;
-  background:#1a1a1a;
-  border-radius:15px;
-  padding:10px;
-}
-
-.tradeBox {
-  min-height:200px;
-  border:2px dashed #333;
-  border-radius:10px;
-  padding:10px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-}
-
-.pet {
-  width:100px;
-  background:#2a2a2a;
-  border-radius:10px;
-  padding:5px;
-  text-align:center;
-  position:relative;
-}
-
-.pet img {
-  width:100%;
-  border-radius:8px;
-}
-
-.remove {
-  position:absolute;
-  top:2px;
-  right:5px;
-  cursor:pointer;
-  color:red;
-  font-size:14px;
-}
-
-select {
-  width:100%;
-  margin-top:3px;
-  border-radius:5px;
-}
-
-.search {
-  width:95%;
+.search{
+  width:90%;
   margin:10px auto;
   display:block;
   padding:10px;
@@ -78,226 +23,159 @@ select {
   border:none;
 }
 
-.grid {
+.grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:10px;
+  padding:15px;
+}
+
+.card{
+  background:#1e293b;
+  padding:10px;
+  border-radius:12px;
+  text-align:center;
+}
+
+.card img{
+  width:100%;
+}
+
+button{
+  margin-top:5px;
+  border:none;
+  padding:5px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.wrap{
+  display:flex;
   gap:10px;
   padding:10px;
 }
 
-.card {
-  background:#1c1c1c;
-  border-radius:12px;
-  padding:8px;
-  text-align:center;
-  transition:0.2s;
-}
-
-.card:hover {
-  transform:scale(1.05);
-}
-
-.card img {
-  width:100%;
-  border-radius:8px;
-}
-
-.btns {
-  display:flex;
-  gap:5px;
-  margin-top:5px;
-}
-
-button {
+.box{
   flex:1;
-  border:none;
-  border-radius:8px;
-  padding:5px;
-  cursor:pointer;
-}
-
-.you { background:#4caf50; }
-.them { background:#2196f3; }
-
-.check {
-  display:block;
-  margin:20px auto;
-  padding:12px 30px;
-  background:green;
-  border:none;
+  background:#1e293b;
+  padding:10px;
   border-radius:10px;
-  font-size:18px;
 }
 
-.result {
-  text-align:center;
-  font-size:26px;
+.trade{
+  min-height:120px;
 }
 
-.diff {
+.result{
   text-align:center;
-  font-size:18px;
-  color:#aaa;
+  font-size:24px;
+  margin:10px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>Adopt Me Trade Calculator</h1>
+<h1>Trade Calculator</h1>
 
-<div class="container">
-  <div class="side">
+<div class="wrap">
+  <div class="box">
     <h3>You</h3>
-    <div id="you" class="tradeBox"></div>
+    <div id="left" class="trade"></div>
   </div>
-
-  <div class="side">
-    <h3>Them</h3>
-    <div id="them" class="tradeBox"></div>
+  <div class="box">
+    <h3>Other</h3>
+    <div id="right" class="trade"></div>
   </div>
 </div>
 
-<input id="search" class="search" placeholder="Search pet...">
+<div class="result" id="result">0</div>
 
-<div id="pets" class="grid"></div>
+<input class="search" id="search" placeholder="Search pet...">
 
-<button class="check" onclick="calc()">Check Trade</button>
-
-<div id="result" class="result"></div>
-<div id="diff" class="diff"></div>
+<div class="grid" id="pets"></div>
 
 <script>
+let allPets = []
+let values = {}
+let left=[], right=[]
 
-// ================== VALUES ==================
-let VALUES = {}
-
+// ===== LOAD VALUES =====
 fetch("values.json")
-.then(r=>r.json())
-.then(data=>{
-  VALUES = data
-})
+  .then(r=>r.json())
+  .then(v=>values=v)
 
-// ================== LOAD ALL PETS ==================
-let pets = []
-let continueToken = null
+// ===== LOAD ALL PETS (700+) =====
+fetch("https://raw.githubusercontent.com/Beany/adopt-me-pets-data/main/pets.json")
+  .then(r=>r.json())
+  .then(data=>{
+    allPets=data
+    render(data)
+  })
 
-async function loadAllPets(){
-  let url = "https://adoptme.fandom.com/api.php?action=query&list=categorymembers&cmtitle=Category:Pets&cmlimit=500&format=json&origin=*"
-
-  if(continueToken){
-    url += "&cmcontinue=" + continueToken
-  }
-
-  let res = await fetch(url)
-  let data = await res.json()
-
-  pets = pets.concat(data.query.categorymembers)
-
-  if(data.continue){
-    continueToken = data.continue.cmcontinue
-    await loadAllPets()
-  } else {
-    render(pets)
-  }
-}
-
-loadAllPets()
-
-// ================== SEARCH ==================
-search.oninput = e=>{
-  let t = e.target.value.toLowerCase()
-  render(pets.filter(p=>p.title.toLowerCase().includes(t)))
-}
-
-// ================== RENDER ==================
 function render(list){
-  pets.innerHTML=""
+  let petsDiv=document.getElementById("pets")
+  petsDiv.innerHTML=""
 
   list.forEach(p=>{
-    let name = p.title
-    let img = `https://adoptme.fandom.com/wiki/Special:FilePath/${name.replace(/ /g,"_")}.png`
-
-    let div = document.createElement("div")
+    let div=document.createElement("div")
     div.className="card"
 
-    div.innerHTML=`
-      <img src="${img}" onerror="this.src='https://via.placeholder.com/100'">
-      <small>${name}</small>
+    let img=p.image || "https://via.placeholder.com/100"
 
-      <div class="btns">
-        <button class="you" onclick="add('${name}','${img}','you')">You</button>
-        <button class="them" onclick="add('${name}','${img}','them')">Them</button>
-      </div>
+    div.innerHTML=`
+      <img src="${img}">
+      <div>${p.name}</div>
+      <button onclick="add('${p.name}','left')">You</button>
+      <button onclick="add('${p.name}','right')">Other</button>
     `
 
-    pets.appendChild(div)
+    petsDiv.appendChild(div)
   })
 }
 
-// ================== ADD PET ==================
-function add(name,img,side){
-  let div = document.createElement("div")
-  div.className="pet"
+// ===== ADD PET =====
+function add(name,side){
+  let val = values[name]?.N || 5
 
-  div.innerHTML=`
-    <div class="remove" onclick="this.parentElement.remove()">✖</div>
-    <img src="${img}">
-    <small>${name}</small>
+  let obj={name,value:val}
 
-    <select>
-      <option>No Potion</option>
-      <option>R</option>
-      <option>F</option>
-      <option>FR</option>
-      <option>N</option>
-      <option>NR</option>
-      <option>NF</option>
-      <option>NFR</option>
-      <option>M</option>
-      <option>MR</option>
-      <option>MF</option>
-      <option>MFR</option>
-    </select>
-  `
+  if(side=="left") left.push(obj)
+  else right.push(obj)
 
-  document.getElementById(side).appendChild(div)
+  update()
 }
 
-// ================== CALCULATE ==================
-function calc(){
-  let y = calcSide("you")
-  let t = calcSide("them")
+// ===== UPDATE =====
+function update(){
+  let l=document.getElementById("left")
+  let r=document.getElementById("right")
 
-  let d = Math.abs(y - t)
+  l.innerHTML=""
+  r.innerHTML=""
 
-  if(y > t){
-    result.textContent = "❌ Lose"
-  } else if(y < t){
-    result.textContent = "✅ Win"
-  } else {
-    result.textContent = "⚖️ Fair"
-  }
-
-  diff.textContent = "Difference: " + d.toFixed(1)
-}
-
-function calcSide(id){
-  let total = 0
-
-  document.getElementById(id).querySelectorAll(".pet").forEach(p=>{
-    let name = p.querySelector("small").textContent
-    let type = p.querySelector("select").value
-
-    if(VALUES[name] && VALUES[name][type]){
-      total += VALUES[name][type]
-    }
+  left.forEach(p=>{
+    l.innerHTML+=`<div>${p.name} (${p.value})</div>`
   })
 
-  return total
+  right.forEach(p=>{
+    r.innerHTML+=`<div>${p.name} (${p.value})</div>`
+  })
+
+  let sumL=left.reduce((a,b)=>a+b.value,0)
+  let sumR=right.reduce((a,b)=>a+b.value,0)
+
+  let diff=sumL-sumR
+
+  document.getElementById("result").innerText=diff
 }
 
+// ===== SEARCH =====
+document.getElementById("search").oninput=e=>{
+  let t=e.target.value.toLowerCase()
+  render(allPets.filter(p=>p.name.toLowerCase().includes(t)))
+}
 </script>
 
 </body>
-  </html>
+</html>
