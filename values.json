@@ -1,0 +1,10 @@
+{
+  "Shadow Dragon": { "N": 1000, "FR": 950 },
+  "Bat Dragon": { "N": 900, "FR": 850 },
+  "Frost Dragon": { "N": 700, "FR": 650 },
+  "Owl": { "N": 600, "FR": 550 },
+  "Parrot": { "N": 500, "FR": 450 },
+  "Evil Unicorn": { "N": 450, "FR": 420 },
+  "Crow": { "N": 400, "FR": 380 },
+  "Arctic Reindeer": { "N": 350, "FR": 330 }
+}
