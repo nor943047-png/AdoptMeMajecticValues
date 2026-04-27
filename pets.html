@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Питомцы</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+        }
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        #list {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Питомцы</h1>
+    <a href="index.html">Назад</a>
+    <div id="list">Загрузка данных...</div>
+    <script>
+        fetch('values.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Сеть ответила с ошибкой ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('list').textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                document.getElementById('list').textContent = 'Ошибка загрузки данных: ' + error.message;
+            });
+    </script>
+</body>
+</html>
